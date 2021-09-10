@@ -15,9 +15,8 @@ from pages import (
     about
 )
 
-from server import app
+from server import app, server
 
-dash_app = app
 
 header = dbc.Container(
     [
