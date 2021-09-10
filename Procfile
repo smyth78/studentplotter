@@ -1,1 +1,1 @@
-web: gunicorn student_plotter.wsgi
+web: gunicorn student_plotter:server
