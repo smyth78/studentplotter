@@ -11,14 +11,14 @@ import dash._callback_context as cb_ctx
 from dash.exceptions import PreventUpdate
 import plotly.graph_objects as go
 
-from server import app
+
 from helper_modules.alerts import *
 from helper_modules.numerical_helpers import *
 from constants import *
 from dictionaries import *
 from helper_modules.general_helpers import *
 
-
+from server import app
 
 
 def layout():

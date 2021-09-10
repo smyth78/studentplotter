@@ -1,1 +1,1 @@
-web: gunicorn student_plotter:app
+web: gunicorn student_plotter:dash_app
