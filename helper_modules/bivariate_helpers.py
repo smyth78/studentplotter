@@ -15,7 +15,10 @@ def get_corr_matrix(df):
 
 
 def get_trendline_stats(df, ind_var, dep_var):
-    slope, intercept, r_value, p_value, std_err = stats.linregress(df[ind_var], df[dep_var])
+    r_value = df[ind_var].corr(df[dep_var])
+    eqn_data = np.polyfit(df[ind_var], df[dep_var], 1)
+    slope = eqn_data[0]
+    intercept = eqn_data[1]
     try:
         slope = round(float(slope), 3)
         intercept = round(float(intercept), 3)
