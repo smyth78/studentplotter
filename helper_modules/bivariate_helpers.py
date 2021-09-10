@@ -1,5 +1,4 @@
 import numpy as np
-from scipy import stats
 from sigfig import round
 import dash_table
 
