@@ -1,1 +1,1 @@
-web: gunicorn student_plotter:server
+web: gunicorn student_plotter:app

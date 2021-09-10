@@ -1,10 +1,9 @@
 # index page
 import dash_core_components as dcc
-import dash_bootstrap_components as dbc
 import dash_html_components as html
 from dash.dependencies import Input, Output, State
-
-from server import app
+import dash
+import dash_bootstrap_components as dbc
 
 # app pages
 from pages import (
@@ -14,6 +13,17 @@ from pages import (
     bivariate,
     about
 )
+
+app = dash.Dash(
+    __name__,
+    external_stylesheets=[dbc.themes.SANDSTONE],
+    prevent_initial_callbacks=False,
+)
+
+server = app.server
+app.config.suppress_callback_exceptions = True
+app.title = 'StudentPlotter3.0'
+
 
 
 header = dbc.Container(
