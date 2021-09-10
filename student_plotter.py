@@ -20,7 +20,6 @@ app = dash.Dash(
     prevent_initial_callbacks=False,
 )
 
-server = app.server
 app.config.suppress_callback_exceptions = True
 app.title = 'StudentPlotter3.0'
 
