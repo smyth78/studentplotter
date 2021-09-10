@@ -285,7 +285,7 @@ def get_comb_figure(df, parsed_inputs, title, colour_scheme, width, height, x_ti
         # add the mean/median line
         mean, median = get_mean_median(df[pri_f].values)
 
-        if sec_f is '':
+        if sec_f == '':
             return no_update, html.Div([select_sec_f_or_another_f]), no_update, no_update
 
         # pri_f_list is a list of dataframes split by sec_f
