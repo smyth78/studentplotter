@@ -22,7 +22,7 @@ header = dbc.Container(
     [
         dbc.Nav(
             [
-                dbc.NavItem(dbc.NavLink("Upload123", href="/")),
+                dbc.NavItem(dbc.NavLink("Upload", href="/")),
                 dbc.NavItem(dbc.NavLink("Categorical", href="/categorical")),
                 dbc.NavItem(dbc.NavLink("Numerical", href='/numerical')),
                 dbc.NavItem(dbc.NavLink('Bivariate', href='/bivariate')),
