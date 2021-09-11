@@ -17,7 +17,7 @@ def layout():
                 id='datatable-upload',
                 children=html.Div([
                     'Click here to ',
-                    html.A('select CSV file')
+                    html.A('upload CSV file')
                 ]),
                 style={
                     'width': '30%', 'height': '60px', 'lineHeight': '60px',
