@@ -9,7 +9,7 @@ def layout():
             dbc.Col([
                 dbc.Jumbotron(
         [
-            html.H1("StudentPlotter3.0", className="display-3"),
+            html.H1("studentplotter", className="display-3"),
             html.P(
                 "A simple browser based graphing "
                 "tool to help students analyse medium sized datasets.",

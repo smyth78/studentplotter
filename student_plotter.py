@@ -35,7 +35,7 @@ header = dbc.Container(
 app.layout = html.Div(
     [
         dbc.NavbarSimple([header], className="mb-5", id='nav-bar',
-                         brand="StudentPlotter3.0",
+                         brand="studentplotter",
                          brand_href="/",
                          color="primary",
                          dark=True,
