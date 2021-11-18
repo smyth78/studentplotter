@@ -350,7 +350,7 @@ def update_main_chart(pri_feat, sec_f, freq_choice, chart_type, title, colour_sc
                             'color': colour_scheme[0]
                         },
                     ))
-                    fig.update_xaxes(type='category')
+                    fig.update_layout(xaxis=dict(dtick=1))
             fig.update_yaxes(secondary_y=False) if (is_show_cf and is_continuous) else None
             fig.update_layout(bargap=0 if is_continuous else 0.2, showlegend=True if is_split else False,
                               plot_bgcolor='white', width=LARGE_WIDTH * width, height=LARGE_HEIGHT * height)
