@@ -47,8 +47,15 @@ def update_output(contents, filename, data):
         print(filename)
         df = parse_contents(contents, filename)
         df = df.fillna('None')
+
+    # get numerical data
+    numerics = ['int16', 'int32', 'int64', 'float16', 'float32', 'float64']
+    df_num = df.select_dtypes(include=numerics)
+
     df_json = df.to_json(orient='columns')
     df_dict = df.to_dict('records')
+
+
     return df_dict, [{"name": i, "id": i} for i in df.columns], df_json
 
 def parse_contents(contents, filename):
@@ -61,6 +68,9 @@ def parse_contents(contents, filename):
         except UnicodeDecodeError:
             print('unicode decode error')
             df = pd.read_csv(io.StringIO(decoded.decode("ISO-8859-1")))
+
+        # this removes the unnamed columsn
+        df = df.loc[:, ~df.columns.str.match('Unnamed')]
 
         return df
     elif 'xls' in filename:

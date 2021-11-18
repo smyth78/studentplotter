@@ -387,7 +387,7 @@ def update_histo(pri_feat, sec_feat, order, custom_order, title, width,
             fig = px.histogram(df, x=sec_feat, y=y_names, barmode='group', template="simple_white",
                                width=LARGE_WIDTH*width, height=LARGE_HEIGHT*height, histnorm=freq_choice,
                                color_discrete_sequence=colour_scheme)
-            ## need to sort out split tables...
+
             columns_f, data_f = create_freq_table(list_for_df_freq_table, column_names, True)
             cat_freq_title = '2-way table:'
     if fig != no_update:

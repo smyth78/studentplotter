@@ -17,6 +17,7 @@ from helper_modules.numerical_helpers import *
 from constants import *
 from dictionaries import *
 from helper_modules.general_helpers import *
+from helper_modules.categorical_helpers import *
 
 from server import app
 
@@ -106,7 +107,7 @@ def layout():
                                                     style_cell={
                                                         'height': 'auto',
                                                         # all three widths are needed
-                                                        'minWidth': '10px', 'width': '20px', 'maxWidth': '30px',
+                                                        'minWidth': '20px', 'width': '25px', 'maxWidth': '30px',
                                                         'whiteSpace': 'normal'
                                                     },
                                                     columns=[],
@@ -167,6 +168,7 @@ def get_data(d_type):
 
 # Call the Store and find the session data, output to MAIN option dropdown
 @app.callback([Output('pri-num-feature', 'options'),
+               Output('sec-num-cat-feature', 'options'),
                Output('alert-num-1', 'children')],
               [Input('session', 'modified_timestamp')],
               [State('session', 'data')])
@@ -181,13 +183,18 @@ def get_data(analyse_link, data):
     df = pd.DataFrame.from_dict(data, orient='columns')
 
     # get numerical data
-    df_num = df.select_dtypes(include=['number'])
+    numerics = ['int16', 'int32', 'int64', 'float16', 'float32', 'float64']
+    df_num = df.select_dtypes(include=numerics)
 
     # find the num cols
     num_cols = [c for c in df.columns if c in df_num.columns]
 
-    options = [{'label': i, 'value': i} for i in num_cols]
-    return options, alert
+    # find the cols not in numerical data
+    cat_cols = [c for c in df.columns if c not in df_num.columns]
+
+    num_options = [{'label': i, 'value': i} for i in num_cols]
+    cat_options = [{'label': i, 'value': i} for i in cat_cols]
+    return num_options, cat_options, alert
 
 # this callback is for the main tab simple graph
 @app.callback(
@@ -195,8 +202,11 @@ def get_data(analyse_link, data):
      Output('main-stats-summary-div', 'children'),
      Output('main-table-alert', 'children'),
      Output('main-freq-table-div', 'children'),
-     Output("main-show-cum-f", 'options')],
+     Output("main-show-cum-f", 'options'),
+     Output('sec-num-cat-feature-div', 'style')],
     [Input('pri-num-feature', 'value'),
+     Input('sec-num-cat-feature', 'value'),
+     Input('freq-choice-num', 'value'),
      Input('main-chart-type', 'value'),
      Input('main-title', 'value'),
      Input('main-colour-scheme', 'value'),
@@ -211,7 +221,7 @@ def get_data(analyse_link, data):
      Input("main-show-median", 'value')],
     [State('session', 'data')]
 )
-def update_main_chart(pri_feat, chart_type, title, colour_scheme, width, height, bin_min, bin_width, d_type,
+def update_main_chart(pri_feat, sec_f, freq_choice, chart_type, title, colour_scheme, width, height, bin_min, bin_width, d_type,
                       grouping, show_cum, show_mean, show_median, data):
     colour_scheme = get_colour_scheme(colour_scheme) if colour_scheme is not None else px.colors.qualitative.G10
 
@@ -226,10 +236,15 @@ def update_main_chart(pri_feat, chart_type, title, colour_scheme, width, height,
     data_f = None
     columns_f = None
     alert = None
+    sec_num_cat_feature_div_style = no_update
 
     fig = no_update
 
     style_show_cf_switch = [{"label": "Show CF", "value": 'show-cf', 'disabled': False if chart_type == 'hist' else True}]
+
+    # freq-choice ie density or not?
+    freq_choice = freq_choice if freq_choice == 'probability density' else None
+    y_title = 'Frequency' if freq_choice is None else 'Frequency density'
 
     is_bins_set = True if (bin_min is not None and bin_width is not None) else False
 
@@ -245,6 +260,9 @@ def update_main_chart(pri_feat, chart_type, title, colour_scheme, width, height,
         is_grouped = True if grouping == 'grouped' else False
         is_continuous = True if d_type == 'cont' else False
         is_show_cf = True if 'show-cf' in show_cum else False
+        is_split = True if not is_continuous and chart_type == 'hist' and sec_f else False
+
+        sec_num_cat_feature_div_style = {'display': 'block' if not is_continuous and chart_type == 'hist' else 'none'}
 
         # if the data is grouped
         if is_grouped:
@@ -271,6 +289,23 @@ def update_main_chart(pri_feat, chart_type, title, colour_scheme, width, height,
 
         fig = make_subplots(specs=[[{"secondary_y": True}]]) if is_show_cf and chart_type == 'hist' else go.Figure()
 
+        # first look to find the exception when the data is discrete and split
+        if is_split:
+                # add a warning if they choose box and try to split....
+                # ungrouped only
+                # need to make a dff for this data
+                #     col_names, data_f = split_disc_data_by_sec_f(df, pri_feat, sec_f)
+                dff, y_names, list_for_df_freq_table, column_names  = split_cat_data_by_sec_f(df, sec_f, pri_feat)
+                # reverse the order of features cuase looks better on eye in table
+                dff_for_table, y_names_for_2_way, list_for_df_freq_table_for_2_way, column_names_for_2_way = \
+                    split_cat_data_by_sec_f(df, pri_feat, sec_f)
+                list_for_df_freq_table_for_2_way[0][0] = pri_feat
+                columns_f, data_f = create_freq_table(list_for_df_freq_table_for_2_way, column_names_for_2_way, True)
+                table_freq = make_ss_freq_table(columns_f, data_f, False, None)
+                list_of_x_vals_inc_pri_f = []
+                for sec_name in y_names:
+                    list_of_x_vals_inc_pri_f.append([dff[sec_name].values, sec_name])
+                table_ss = make_comb_ss_table_div(list_of_x_vals_inc_pri_f, y_names, None, False)
         if chart_type == 'hist':
             if is_grouped:
                 data_names = None
@@ -291,24 +326,35 @@ def update_main_chart(pri_feat, chart_type, title, colour_scheme, width, height,
                     },
                 ))
             else:
-                values = dff[pri_feat].tolist()
-                nums_as_cats = [str(x) for x in values]
-                fig.add_trace(go.Bar(
-                    x=nums_as_cats,
-                    y=dff['Count'].values,
-                    offset=-0.4,
-                    marker={
-                        'line': {
-                            'width': 1,
-                            'color': 'white'},
-                        'color': colour_scheme[0]
-                    },
-                ))
-                fig.update_xaxes(type='category')
+                if is_split:
+                    # fig = px.bar(dff, x=y_names, y=dff, color=sec_f, barmode="group")
+                    fig = px.histogram(dff, x=pri_feat, y=y_names, barmode='group', template="simple_white",
+                                       width=LARGE_WIDTH * width, height=LARGE_HEIGHT * height, histnorm=freq_choice,
+                                       color_discrete_sequence=colour_scheme)
+                    fig.update_xaxes(type='category')
+                    fig.update_layout(
+                        legend_title='',
+                        bargroupgap=0.1
+                        )
+                else:
+                    values = dff[pri_feat].tolist()
+                    nums_as_cats = [str(x) for x in values]
+                    fig.add_trace(go.Bar(
+                        x=nums_as_cats,
+                        y=dff['Count'].values,
+                        offset=-0.4,
+                        marker={
+                            'line': {
+                                'width': 1,
+                                'color': 'white'},
+                            'color': colour_scheme[0]
+                        },
+                    ))
+                    fig.update_xaxes(type='category')
             fig.update_yaxes(secondary_y=False) if (is_show_cf and is_continuous) else None
-            fig.update_layout(bargap=0 if is_continuous else 0.2, showlegend=False,
+            fig.update_layout(bargap=0 if is_continuous else 0.2, showlegend=True if is_split else False,
                               plot_bgcolor='white', width=LARGE_WIDTH * width, height=LARGE_HEIGHT * height)
-            fig.update_yaxes(title='Frequency', showline=True, linewidth=2, linecolor='black')
+            fig.update_yaxes(title=y_title, showline=True, linewidth=2, linecolor='black')
 
         elif chart_type == 'box':
             fig = px.box(df[pri_feat], orientation='h', template="simple_white", x=pri_feat,
@@ -349,7 +395,7 @@ def update_main_chart(pri_feat, chart_type, title, colour_scheme, width, height,
                                 x0=median, y0=0, x1=median, y1=1.1, line={'dash': 'dash', 'width': 3, 'color': 'blue'},
                                 ))
 
-    return fig, table_ss, alert, table_freq, style_show_cf_switch
+    return fig, table_ss, alert, table_freq, style_show_cf_switch, sec_num_cat_feature_div_style
 
 
 # populate the customised div on bar chart

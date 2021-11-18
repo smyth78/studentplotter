@@ -139,7 +139,7 @@ def data_type():
                             {'label': 'Continuous', 'value': 'cont'},
                             {'label': 'Discrete', 'value': 'disc'},
                         ],
-                        value='cont',
+                        value='disc',
                         inline=False
                     ),
                     ]
@@ -154,7 +154,7 @@ def grouping_type():
                             {'label': 'Grouped', 'value': 'grouped'},
                             {'label': 'Ungrouped', 'value': 'ungrouped'},
                         ],
-                        value='grouped',
+                        value='ungrouped',
                         inline=False
                     ),
                     ]
@@ -182,13 +182,28 @@ def main_feature_row():
         dbc.Row(dbc.Col([dcc.Markdown('##### Single feature analysis')]),
                 style={'padding-top': ROW_MARGIN}),
         dbc.Row([
-        dbc.Col(
-            html.Div([
+        dbc.Col([
                 dcc.Dropdown(
                     placeholder='Choose the primary feature...',
                     id='pri-num-feature',
                     style={'display': 'block'}),
-                    ]), width=4),
+                html.Div([
+                    dcc.Dropdown(
+                        placeholder='Split by cat...',
+                        id='sec-num-cat-feature'),
+                    dbc.RadioItems(
+                        id='freq-choice-num',
+                        inline=True,
+                        options=[
+                            {'label': 'Frequency', 'value': 'freq'},
+                            {'label': 'Frequency density', 'value': 'probability density'},
+
+                        ],
+                        value='freq',
+                        style={'padding-top':'5px'}
+                    ),
+                ], id='sec-num-cat-feature-div', style={'display': 'none'})
+            ], width=4),
         dbc.Col([chart_choice()], width=5),
         dbc.Col([data_type()], width=2),
         dbc.Col([grouping_type()], width=1, id='main-grouping-div'),
@@ -538,3 +553,18 @@ def get_average_switches(is_comb):
         switch=True)]),
     ])
     return div
+
+
+def split_disc_data_by_sec_f(df, disc_feat, cat_feat):
+    dff = df[[disc_feat, cat_feat]]
+    print(dff)
+    pri_cats = np.unique(df[disc_feat].values)
+    sec_cats = np.unique(df[cat_feat].values)
+    bar_counts = []
+    for sec_cat in sec_cats:
+        filtered_df = dff.loc[dff[cat_feat] == sec_cat]
+        count_df = filtered_df[filtered_df[cat_feat] == sec_cat].shape[0]
+        bar_counts.append(count_df)
+    return sec_cats, bar_counts
+
+
