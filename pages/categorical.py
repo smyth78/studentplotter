@@ -83,12 +83,7 @@ def layout():
                                     html.Div([], style={'padding-bottom':'10px'}),
                                     html.Div([
                                         html.Div([
-                                            dcc.Dropdown(
-                                                placeholder='Choose scheme...',
-                                                options=[{'label': i, 'value': i} for i in COLOUR_SCHEME],
-                                                value='Light',
-                                                id='colour-scheme')
-                                        ], style={'margin-bottom': '10px'}),
+                                        ], style={'margin-bottom': '10px'}, id='colour-scheme-cat'),
                                         dbc.RadioItems(
                                             id='chart-custom-choice',
                                             inline=True,
@@ -222,13 +217,16 @@ def allow_flip_features(show_sec_f_checks):
         return show_sec_not_selected
 
 
-# Call the Store and find the session data, output to option dropdown
+# Call the Store and find the session data, output to option dropdown - add the random colour choice
 @app.callback([Output('pri-feature', 'options'),
                Output('sec-feature', 'options'),
-               Output('alert-cat-1', 'children')],
+               Output('alert-cat-1', 'children'),
+               Output('colour-scheme-cat', 'children')],
               [Input('session', 'modified_timestamp')],
               [State('session', 'data')])
 def get_data(analyse_link, data):
+    colour_div = get_random_colour_stuff('cat-colour')
+
     # add alerts
     if data is None or data == '' or data == []:
         alert = html.Div([no_data])
@@ -248,7 +246,7 @@ def get_data(analyse_link, data):
     df = df[cat_cols]
 
     options = [{'label': i, 'value': i} for i in cat_cols]
-    return options, options, alert
+    return options, options, alert, colour_div
 
 
 # this is for the bar and the textarea
@@ -271,7 +269,7 @@ def get_data(analyse_link, data):
      Input('chart-type', 'value'),
      Input('hide-legend', 'value'),
      Input('show-sec-f', 'value'),
-     Input('colour-scheme', 'value'),
+     Input('cat-colour', 'value'),
      Input('freq-choice', 'value')],
     [State('session','data'),
      State('show-sec-f', 'value'),

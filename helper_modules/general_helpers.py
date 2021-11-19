@@ -3,12 +3,32 @@ import decimal
 import numpy as np
 import pandas as pd
 import sigfig
+import random
 
 import plotly.express as px
 import dash_table
 import dash_html_components as html
+import dash_core_components as dcc
+
+from dictionaries import *
+
+def shuffle_and_return(x):
+  random.shuffle(x)
+  return x
+
+def get_random_colour_stuff(id):
+    colour_options = shuffle_and_return([{'label': i, 'value': i} for i in COLOUR_SCHEME])
+    starting_colour = random.choice(colour_options)
+
+    colour_div = dcc.Dropdown(
+        placeholder='Choose scheme...',
+        options=colour_options,
+        value=starting_colour,
+        id=id)
+    return colour_div
 
 def get_colour_scheme(colour_scheme):
+    colour_scheme = colour_scheme['value'] if type(colour_scheme) == dict else colour_scheme
     if colour_scheme == 'Light':
         return px.colors.qualitative.Light24
     elif colour_scheme == 'Dark':

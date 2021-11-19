@@ -28,12 +28,7 @@ def main_children():
                                       placeholder='Add graph title...')
                             ], style={'margin-bottom': ROW_MARGIN}),
                   html.Div([
-                      dcc.Dropdown(
-                          placeholder='Choose scheme...',
-                          options=[{'label': i, 'value': i} for i in COLOUR_SCHEME],
-                          value='Light',
-                          id='main-colour-scheme')
-                  ], style={'margin-bottom': ROW_MARGIN}),
+                  ], style={'margin-bottom': ROW_MARGIN}, id='colour-scheme-num-main'),
                   dbc.Row([
                       dbc.Col([dbc.RadioItems(
                           id='main-chart-custom-choice',

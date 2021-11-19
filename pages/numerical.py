@@ -69,12 +69,7 @@ def layout():
                                                       ], style={'margin-bottom': ROW_MARGIN,
                                                                 'margin-top': ROW_MARGIN}),
                                             html.Div([
-                                                dcc.Dropdown(
-                                                    placeholder='Choose scheme...',
-                                                    options=[{'label': i, 'value': i} for i in COLOUR_SCHEME],
-                                                    value='Light',
-                                                    id='comb-colour-scheme')
-                                            ], style={'margin-bottom': ROW_MARGIN}),
+                                            ], style={'margin-bottom': ROW_MARGIN}, id='colour-scheme-num-comb'),
                                             dbc.Row([
                                                 dbc.Col([
                                                     dbc.RadioItems(
@@ -169,10 +164,15 @@ def get_data(d_type):
 # Call the Store and find the session data, output to MAIN option dropdown
 @app.callback([Output('pri-num-feature', 'options'),
                Output('sec-num-cat-feature', 'options'),
-               Output('alert-num-1', 'children')],
+               Output('alert-num-1', 'children'),
+               Output('colour-scheme-num-comb', 'children'),
+               Output('colour-scheme-num-main', 'children')],
               [Input('session', 'modified_timestamp')],
               [State('session', 'data')])
 def get_data(analyse_link, data):
+    colour_div_1 = get_random_colour_stuff('comb-colour')
+    colour_div_2 = get_random_colour_stuff('main-colour')
+
     # add alerts
     if data is None or data == '' or data == []:
         alert = html.Div([no_data])
@@ -194,7 +194,7 @@ def get_data(analyse_link, data):
 
     num_options = [{'label': i, 'value': i} for i in num_cols]
     cat_options = [{'label': i, 'value': i} for i in cat_cols]
-    return num_options, cat_options, alert
+    return num_options, cat_options, alert, colour_div_1, colour_div_2
 
 # this callback is for the main tab simple graph
 @app.callback(
@@ -209,7 +209,7 @@ def get_data(analyse_link, data):
      Input('freq-choice-num', 'value'),
      Input('main-chart-type', 'value'),
      Input('main-title', 'value'),
-     Input('main-colour-scheme', 'value'),
+     Input('main-colour', 'value'),
      Input('main-chart-width', 'value'),
      Input('main-chart-height', 'value'),
      Input('main-min', 'value'),
@@ -328,10 +328,25 @@ def update_main_chart(pri_feat, sec_f, freq_choice, chart_type, title, colour_sc
             else:
                 if is_split:
                     # fig = px.bar(dff, x=y_names, y=dff, color=sec_f, barmode="group")
-                    fig = px.histogram(dff, x=pri_feat, y=y_names, barmode='group', template="simple_white",
-                                       width=LARGE_WIDTH * width, height=LARGE_HEIGHT * height, histnorm=freq_choice,
-                                       color_discrete_sequence=colour_scheme)
-                    fig.update_xaxes(type='category')
+                    fig = go.Figure()
+                    colours_left = colour_scheme
+                    for feat in column_names_for_2_way:
+                        col_sum = dff[feat].sum()
+                        random_colour_index = random.randint(0, len(colour_scheme))
+                        this_colour = colours_left[random_colour_index]
+                        colours_left.pop(random_colour_index)
+                        fig.add_trace(go.Bar(
+                            x=dff[pri_feat],
+                            # y=dff[feat],
+                            y=[x/col_sum for x in dff[feat]] if freq_choice == 'probability density' else dff[feat],
+                            name=feat,
+                            marker={
+                                'line': {
+                                    'width': 1,
+                                    'color': 'white'},
+                                'color': this_colour
+                            },
+                        ))
                     fig.update_layout(
                         legend_title='',
                         bargroupgap=0.1
@@ -339,18 +354,11 @@ def update_main_chart(pri_feat, sec_f, freq_choice, chart_type, title, colour_sc
                 else:
                     values = dff[pri_feat].tolist()
                     nums_as_cats = [str(x) for x in values]
-                    fig.add_trace(go.Bar(
-                        x=nums_as_cats,
-                        y=dff['Count'].values,
-                        offset=-0.4,
-                        marker={
-                            'line': {
-                                'width': 1,
-                                'color': 'white'},
-                            'color': colour_scheme[0]
-                        },
-                    ))
-                    fig.update_layout(xaxis=dict(dtick=1))
+                    fig = px.histogram(df, x=pri_feat, y=df[pri_feat].values, template="simple_white",
+                                         width=LARGE_WIDTH * width, height=LARGE_HEIGHT * height, histnorm=freq_choice,
+                                         color_discrete_sequence=colour_scheme)
+
+            fig.update_layout(xaxis=dict(dtick=1))
             fig.update_yaxes(secondary_y=False) if (is_show_cf and is_continuous) else None
             fig.update_layout(bargap=0 if is_continuous else 0.2, showlegend=True if is_split else False,
                               plot_bgcolor='white', width=LARGE_WIDTH * width, height=LARGE_HEIGHT * height)
@@ -520,7 +528,7 @@ def add_sub_comb_feats(add, delete, existing_rows, index, sec_f_divs, data):
      Output('comb-stats-summary-div', 'children')],
     [Input('num-draw', 'n_clicks'),
      Input('comb-title', 'value'),
-     Input('comb-colour-scheme', 'value'),
+     Input('comb-colour', 'value'),
      Input('comb-chart-width', 'value'),
      Input('comb-chart-height', 'value'),
      Input('comb-x-axis-title', 'value'),
