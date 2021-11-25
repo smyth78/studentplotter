@@ -228,7 +228,6 @@ def update_main_chart(pri_feat, sec_f, freq_choice, chart_type, title, colour_sc
     # get the data into a PD
     data = json.loads(data)
     df = pd.DataFrame.from_dict(data, orient='columns')
-    dff = df.copy()
 
     table_ss = None
     table_freq = None
@@ -282,38 +281,34 @@ def update_main_chart(pri_feat, sec_f, freq_choice, chart_type, title, colour_sc
                 columns={'Col1': 'Col_value'})
             dff.reset_index(drop=True, inplace=True)
 
+            # create the table for freq table for DISC - > create a df of the info
+            columns_f, data_f = make_freq_table_cols_data(is_continuous, False, dff['Count'].values,
+                                                          dff[pri_feat].values, pri_feat)
+        table_ss = make_ss_dash_table(df[pri_feat].values, False, None)
+        table_freq = make_ss_freq_table(columns_f, data_f, False, None)
+
         fig = make_subplots(specs=[[{"secondary_y": True}]]) if is_show_cf and chart_type == 'hist' else go.Figure()
 
         # first look to find the exception when the data is discrete and split
-        if is_split and not is_grouped:
+        if is_split:
                 # add a warning if they choose box and try to split....
+                # ungrouped only
+                # need to make a dff for this data
+                #     col_names, data_f = split_disc_data_by_sec_f(df, pri_feat, sec_f)
                 dff, y_names, list_for_df_freq_table, column_names  = split_cat_data_by_sec_f(df, sec_f, pri_feat)
                 # reverse the order of features cuase looks better on eye in table
                 dff_for_table, y_names_for_2_way, list_for_df_freq_table_for_2_way, column_names_for_2_way = \
                     split_cat_data_by_sec_f(df, pri_feat, sec_f)
+                list_for_df_freq_table_for_2_way[0][0] = pri_feat
+                columns_f, data_f = create_freq_table(list_for_df_freq_table_for_2_way, column_names_for_2_way, True)
+                table_freq = make_ss_freq_table(columns_f, data_f, False, None)
+                list_of_x_vals_inc_pri_f = []
+                for sec_name in y_names:
+                    list_of_x_vals_inc_pri_f.append([dff[sec_name].values, sec_name])
+                table_ss = make_comb_ss_table_div(list_of_x_vals_inc_pri_f, y_names, None, False)
 
-        ## ONe hot encode the DF here....for discrete, ungrouped data only
-        dff = encode_disc_data(dff, pri_feat) if not is_continuous and not is_grouped else None
-
-        # create the SS and Freq now....
-        if is_split:
-            list_for_df_freq_table_for_2_way[0][0] = pri_feat
-            dff_copy = df.copy()
-            dff['Total'] = dff.sum(axis=1)
-            columns_f = [{"name": i, "id": i} for i in dff.columns]
-            data_f = dff.to_dict('records')
-            table_freq = make_ss_freq_table(columns_f, data_f, False, None)
-            list_of_x_vals_inc_pri_f = []
-            for sec_name in y_names:
-                selected_df = dff_copy[dff_copy[sec_f] == sec_name]
-                list_of_x_vals_inc_pri_f.append([selected_df[pri_feat].values, sec_name])
-            table_ss = make_comb_ss_table_div(list_of_x_vals_inc_pri_f, None,  y_names, True)
-        else:
-            # create the table for freq table for DISC - > create a df of the info
-            columns_f, data_f = make_freq_table_cols_data(is_continuous, False, dff['Count'].values,
-                                                          dff[pri_feat].values, pri_feat)
-            table_ss = make_ss_dash_table(df[pri_feat].values, False, None)
-            table_freq = make_ss_freq_table(columns_f, data_f, False, None)
+        ## ONe hot encode the DF here....
+        dff = encode_disc_data(dff, pri_feat)
 
         if chart_type == 'hist':
             if is_grouped:
@@ -335,33 +330,38 @@ def update_main_chart(pri_feat, sec_f, freq_choice, chart_type, title, colour_sc
                     },
                 ))
             else:
-                fig = go.Figure()
-                colours_left = colour_scheme
-                columns_in_df = column_names_for_2_way if is_split else ['Count']
-                for feat in columns_in_df:
-                    col_sum = dff[feat].sum()
-                    random_colour_index = random.randint(0, len(colour_scheme) - 1)
-                    try:
+                ## THESE TWO CAN BE TOGETHER - draw a bar using iterator and add trace
+                if is_split:
+                    # fig = px.bar(dff, x=y_names, y=dff, color=sec_f, barmode="group")
+                    fig = go.Figure()
+                    colours_left = colour_scheme
+                    for feat in column_names_for_2_way:
+                        col_sum = dff[feat].sum()
+                        random_colour_index = random.randint(0, len(colour_scheme))
                         this_colour = colours_left[random_colour_index]
-                    except IndexError:
-                        this_colour = colour_scheme[random_colour_index]
-                        print('not enough colours left')
-                    colours_left.pop(random_colour_index)
-                    fig.add_trace(go.Bar(
-                        x=dff[pri_feat],
-                        y=[x/col_sum for x in dff[feat]] if freq_choice == 'probability density' else dff[feat],
-                        name=feat,
-                        marker={
-                            'line': {
-                                'width': 1,
-                                'color': 'white'},
-                            'color': this_colour
-                        },
-                    ))
-                fig.update_layout(
-                    legend_title='',
-                    bargroupgap=0.1
-                    )
+                        colours_left.pop(random_colour_index)
+                        fig.add_trace(go.Bar(
+                            x=dff[pri_feat],
+                            # y=dff[feat],
+                            y=[x/col_sum for x in dff[feat]] if freq_choice == 'probability density' else dff[feat],
+                            name=feat,
+                            marker={
+                                'line': {
+                                    'width': 1,
+                                    'color': 'white'},
+                                'color': this_colour
+                            },
+                        ))
+                    fig.update_layout(
+                        legend_title='',
+                        bargroupgap=0.1
+                        )
+                else:
+                    values = dff[pri_feat].tolist()
+                    nums_as_cats = [str(x) for x in values]
+                    fig = px.histogram(df, x=pri_feat, y=df[pri_feat].values, template="simple_white",
+                                         width=LARGE_WIDTH * width, height=LARGE_HEIGHT * height, histnorm=freq_choice,
+                                         color_discrete_sequence=colour_scheme)
 
             fig.update_layout(xaxis=dict(dtick=1))
             fig.update_yaxes(secondary_y=False) if (is_show_cf and is_continuous) else None
@@ -407,11 +407,7 @@ def update_main_chart(pri_feat, sec_f, freq_choice, chart_type, title, colour_sc
                 go.layout.Shape(type='line', xref='x', yref='paper',
                                 x0=median, y0=0, x1=median, y1=1.1, line={'dash': 'dash', 'width': 3, 'color': 'blue'},
                                 ))
-    try:
-        table_freq = table_freq[0]
-        print('table-freq-length', len(table_freq))
-    except TypeError:
-        table_freq = None
+
     return fig, table_ss, alert, table_freq, style_show_cf_switch, sec_num_cat_feature_div_style
 
 

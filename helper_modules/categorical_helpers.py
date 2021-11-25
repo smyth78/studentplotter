@@ -87,20 +87,20 @@ def create_freq_table(list_or_df_freq_table, column_names, is_two_way):
     if is_two_way:
         # format the table appropriatly
         df = pd.DataFrame(list_or_df_freq_table)
-        df = df.set_index(df.columns[0])
         df.columns = df.iloc[0]
         df = df[1:]
-        df = df.apply(pd.to_numeric, downcast='integer')
-        df['Totals'] = df.sum(axis=1)
-        df = df.apply(pd.to_numeric, downcast='integer')
-        df.loc['Totals'] = df.sum(numeric_only=True, axis=0)
+        # df = df.apply(pd.to_numeric, downcast='integer')
+        df['Totals'] = df.sum(numeric_only=True, axis=1)
+        # df = df.apply(pd.to_numeric, downcast='integer')
+        # df.loc['Totals'] = df.sum(numeric_only=True, axis=0)
+        # df.append(df.sum(numeric_only=True), ignore_index=True)
 
         # add the correct column/row titles
         sec_feat_titles = []
         for sec_feat_title in list_or_df_freq_table:
             sec_feat_titles.append(sec_feat_title[0])
         sec_feat_titles.append('Totals')
-        df.insert(0, sec_feat_titles[0], sec_feat_titles[1:])
+        # df.insert(0, sec_feat_titles[0], sec_feat_titles[1:])
 
     else:
         # a df is passed if not split

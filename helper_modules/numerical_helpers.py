@@ -563,3 +563,29 @@ def split_disc_data_by_sec_f(df, disc_feat, cat_feat):
     return sec_cats, bar_counts
 
 
+def encode_disc_data(df, pri_feat):
+    max_value = df[pri_feat].max()
+    df_cols = df.columns
+    data_list = df.values.tolist()
+    new_list = []
+    num_of_columns = len(data_list[0]) - 1
+    for i in range(0, max_value + 1):
+        empty_row = [0] * num_of_columns
+        row = [i] + empty_row
+        new_list.append(row)
+    # for i in range(0, max_value + 1):
+    for row in data_list:
+        index = row[0]
+        new_list[index] = row
+    # remove leading zeroes
+    indices_to_remove = []
+    for i, row in enumerate(new_list):
+        if all(v == 0 for v in row[1:]):
+            indices_to_remove.append(i)
+            break
+    for index in sorted(indices_to_remove, reverse=True):
+        del new_list[index]
+    encoded_df = pd.DataFrame(new_list, columns=df_cols)
+    return encoded_df
+
+
