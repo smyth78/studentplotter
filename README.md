@@ -17,14 +17,14 @@ This is a Dash application that allows the user to produce a range of charts, gr
 3. Install the required dependencies:
 
 
-   pip install -r requirements.txt
+        pip install -r requirements.txt
 
 ## Usage
 
 To run the  app, execute the following command:
 
 
-python student_plotter.py
+        python student_plotter.py
 
 Open your web browser and visit `http://localhost:8050` to view the application.
 
