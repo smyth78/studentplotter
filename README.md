@@ -1,6 +1,8 @@
 # StudentPlotter
 
-This is a Dash application that allows the user to produce a range of charts, graphs and statistics from tabular data
+This is a Dash application that allows the user to produce a range of charts, graphs and statistics from tabular data.
+
+The app can be found live on this link: https://studentplotter.com
 
 ## Installation
 
