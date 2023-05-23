@@ -11,7 +11,7 @@ This is a Dash application that allows the user to produce a range of charts, gr
 
 2. Navigate to the project directory:
 
-    cd studentplotter
+        cd studentplotter
 
 
 3. Install the required dependencies:
