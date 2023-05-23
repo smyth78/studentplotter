@@ -1,40 +1,39 @@
-# DataEng
+# StudentPlotter
 
-This is a Dash applicaiton that allows the user to create interstsing and nuanced datasets which can be graphed using StudentPlotter
+This is a Dash application that allows the user to produce a range of charts, graphs and statistics from tabular data
 
 ## Installation
 
 1. Clone the repository:
 
-        git clone https://github.com/your-username/dash-app.git
+        git clone https://github.com/smyth78/studentplotter
 
 
 2. Navigate to the project directory:
 
-    cd dash-app
+    cd studentplotter
 
 
 3. Install the required dependencies:
 
 
-pip install -r requirements.txt
+   pip install -r requirements.txt
 
 ## Usage
 
 To run the  app, execute the following command:
 
 
-python app.py
+python student_plotter.py
 
 Open your web browser and visit `http://localhost:8050` to view the application.
 
 ## Features
 
-- Create tables with large numbers of rows
-- Create categroical or numerical data which is discrete or continuous
-- Create data from well known (e.g. Normal) distributions
-- Create corellated data
-- Create time series dara
+- Produce summary statistics for features of a dataset
+- Produce charts for both categorical and numerical data
+- Analyze bivariate data with a heatmap
+- Slice and dice datasets according to certain conditions
 
 ## Contributing
 
