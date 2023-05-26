@@ -30,6 +30,8 @@ To run the  app, execute the following command:
 
 Open your web browser and visit `http://localhost:8050` to view the application.
 
+Please see the test data csv file in this repo called 'student_plotter_data.csv'. This can be used to explore the features of studentplotter.
+
 ## Features
 
 - Produce summary statistics for features of a dataset
